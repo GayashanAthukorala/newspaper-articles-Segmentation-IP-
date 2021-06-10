@@ -479,3 +479,95 @@ acceptedRects = []
 
 ############################################################################################################################################
 norm_img = cv2.normalize(diff_img,None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
+
+###########################################################
+#return True,collemCodinate
+    # cv2.waitKey(0)
+    # cv2.waitKey(0)
+    # cv2.waitKey(0)
+    # max_horizontal = int(np.max(horizontal_projection))
+    # mean_horizontal = int(np.mean(horizontal_projection))
+    # # print("M=",mean)
+    # imgHistrogram = blankImage.copy()  # COPY IMAGE FOR DISPLAY PURPOSES
+    # cv2.imshow("imgHistrogram", imgHistrogram)
+    # cv2.rectangle(img=blankImageforVerticle, pt1=(0, height), pt2=(width, height - mean + 100), color=(0, 0, 0), thickness=-1 )
+    # cv2.rectangle(img=blankImageforHorizontal, pt1=(0, height),
+    #               pt2=(int((max_horizontal * 3 + mean_horizontal) / 4), 0), color=(0, 0, 0), thickness=-1)
+    # cv2.rectangle(img=blankImageforVerticle, pt1=(0, heightImg),
+    #               pt2=(widthImg, int((mean_vertical + max_vertical * 2) / 3) - 50), color=(0, 0, 0), thickness=-1)
+    # cv2.imshow("blankImageforVerticle", blankImageforVerticle)
+    #cv2.imshow("blankImageforHorizontal", blankImageforHorizontal)
+    # # cv2.rectangle(blankImage, , ,, -1)
+
+    # blankImageforVerticle = cv2.cvtColor(blankImageforVerticle, cv2.COLOR_BGR2GRAY)
+    # ret3, imgThresholdBWInvert_v = cv2.threshold(blankImageforVerticle, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    # kernel = np.ones((5, 5))
+    # imgThresholdBWInvert_v = cv2.morphologyEx(imgThresholdBWInvert_v, cv2.MORPH_ERODE, kernel)
+    # # imgThreshold = cv2.Canny(imgThresholdBWInvert_v, thres[0], thres[1])  # APPLY CANNY BLUR
+    # cv2.imshow("imgThreshold", imgThresholdBWInvert_v)
+    # ret3, imgThresholdBWInvert_v = cv2.threshold(imgThresholdBWInvert_v, 0, 255,
+    #                                              cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    # contours_v = cv2.findContours(imgThresholdBWInvert_v, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
+    # contours_v = contours_v[0] if len(contours_v) == 2 else contours_v[1]
+    # clusters_v = {}
+    # i = 0
+    # y1 = 0
+    # leftConer = {}
+    # rightConer = {}
+    # x_codinate = {}
+    # for cntr in contours_v:
+    #     x, y, w, h = cv2.boundingRect(cntr)
+    #     clusters_v[i] = [x, y, w, h]
+    #     if (abs(x - 0) < 5):
+    #         leftConer = [x, y, w, h]
+    #     else:
+    #         if (x + w > width - 5):
+    #             rightConer = [x, y, w, h]
+    #         else:
+    #             x_codinate[y1] = x + (w / 2)
+    #             y1 = y1 + 1
+    #     i = i + 1
+    #
+    # print("l:", leftConer)
+    # print("R:", rightConer)
+    # print("clusters:", clusters_v)
+    # print("codi:", x_codinate)
+    # blankImageforHorizontal = cv2.cvtColor(blankImageforHorizontal, cv2.COLOR_BGR2GRAY)
+    # ret3, imgThresholdBWInvert_h = cv2.threshold(blankImageforHorizontal, 0, 255,
+    #                                              cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    # kernel = np.ones((5, 5))
+    # imgThresholdBWInvert_h = cv2.morphologyEx(imgThresholdBWInvert_h, cv2.MORPH_ERODE, kernel)
+    # imgThreshold_h = cv2.Canny(imgThresholdBWInvert_h, thres[0], thres[1])  # APPLY CANNY BLUR
+    # cv2.imshow("imgThreshold_h", imgThresholdBWInvert_h)
+    # ret3, imgThresholdBWInvert_h = cv2.threshold(imgThresholdBWInvert_h, 0, 255,
+    #                                              cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    # contours_h = cv2.findContours(imgThresholdBWInvert_h, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
+    # contours_h = contours_h[0] if len(contours_h) == 2 else contours_h[1]
+    # clusters_h = {}
+    # i = 0
+    #
+    # upperConer = {}
+    # bottomConer = {}
+    # a, b = 0, 0
+    # for cntr in contours_h:
+    #     x, y, w, h = cv2.boundingRect(cntr)
+    #     clusters_h[i] = [x, y, w, h]
+    #     if (abs(y - 0) < 5):
+    #         upperConer = [x, y, w, h]
+    #         a = 1
+    #     if (y + h > height - 5):
+    #         bottomConer = [x, y, w, h]
+    #         b = 1
+    #     i = i + 1
+#################################################################################
+    # cropedImgx = cv2.resize(imgDial, (int(img.shape[1] * widthImg / imgOriginal.shape[1]), int(img.shape[0] * heightImg / imgOriginal.shape[0])))
+    # imgForHorizontalLine_CannyRe = cv2.resize(blankImage, (int(img.shape[1] * widthImg / imgOriginal.shape[1]), int(img.shape[0] * heightImg / imgOriginal.shape[0])))
+    # cv2.imshow("cropedImgx", cropedImgx)
+    # cv2.imshow("imgForHorizontalLine_Canny", imgForHorizontalLine_CannyRe)
+    #
+    # cv2.waitKey(0)
+    # cv2.waitKey(0)
+    # cv2.waitKey(0)
+    #sobelCombined = cv2.cvtColor(sobelCombined, cv2.COLOR_BGR2GRAY)
+
+    # ret3, imgThresholdBW = cv2.threshold(sobelCombined, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
