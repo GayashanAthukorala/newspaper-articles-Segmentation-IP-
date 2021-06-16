@@ -43,6 +43,7 @@ def getXFromRecty(item):
 def merge_taitels(boundryArry):
     z = 0
     newboundryarry = {}
+    #test
     for i in range(0, len(boundryArry)):
         x1, y1, w1, h1, s1 = boundryArry[i][0], boundryArry[i][1], boundryArry[i][2], boundryArry[i][3], boundryArry[i][
             4]

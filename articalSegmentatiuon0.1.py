@@ -313,7 +313,8 @@ def drowLines(img,imgOriginal,thresh):
     kernel = np.ones((3, 2))
     blankImageforHorizontal = cv2.dilate(blankImageforHorizontal, kernel, iterations=2)  # APPLY DILATION
 
-    # cv2.imshow("blankImageforHorizontals", blankImageforHorizontal)
+    cv2.imshow("blankImageforHorizontals", blankImageforHorizontal)
+    cv2.imshow("x_projection_C", blankImageforX)
 
     contours_h = cv2.findContours(blankImageforHorizontal, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
 
@@ -992,14 +993,47 @@ def lineExtender(img,imgOrginal,thresh):
             for j in range(i+1, len(extended_lines)):
                 x_1, y_1, x_2, y_2,s_s = extended_lines[j]
                 if(s_s):
-                    if(abs((x2-x1)-(x_2-x_1))<10) & ((y_1-y1)<150) & (abs(x1-x_1)<10):
+                    if(abs((x2-x1)-(x_2-x_1))<10) & ((y_1-y1)<((imgCopy.shape[0]*abs(x2-x1))/(imgCopy.shape[1]*4))) & (abs(x1-x_1)<10):
 
                         extended_lines[j][4]=False
+                    elif((y_1-y1)<imgCopy.shape[0]/80):
+                        if(abs( x1- x_1)<10)|(abs( x2- x_2)<10):
+                            if((x2-x1)>(x_2-x_1)):
+                                extended_lines[j][4] = False
+                            else:
+                                extended_lines[i][4] = False
+                        if((x1<x_1)&(x_2<x2))|((x1>x_1)&(x_2>x2)):
+                            if ((x2 - x1) > (x_2 - x_1)):
+                                extended_lines[j][4] = False
+                            else:
+                                extended_lines[i][4] = False
+    z=0
+    for i in range( len(extended_lines)-1,-1,-1):
+        x1, y1, x2, y2, s = extended_lines[i]
 
+        if (s):
+            l_bottom = (x1, imgCopy.shape[0])
+            r_bottom = (x2, imgCopy.shape[0])
+            for j in range(i+1, len(extended_lines)):
+                x_1, y_1, x_2, y_2, s_s = extended_lines[j]
+                if (s_s):
+                    if(x1==x_1)|((x_1<x1) &(x1<x_2)):
+                        l_bottom=(x1,y_1)
+                        break
+            for j in range(i+1, len(extended_lines)):
+                x_1, y_1, x_2, y_2, s_s = extended_lines[j]
+                if (s_s):
+                    if(x2==x_2) |((x_1<x2) &(x2<x_2)):
+                        r_bottom=(x2,y_2)
+                        break
+            imgCopy = cv2.line(imgCopy, (x1, y1), l_bottom, (0, 0, 255), 10)  # ((x, ), (w, ))
+            imgCopy = cv2.line(imgCopy, (x2, y2), r_bottom, (0, 0, 255), 10)  # ((x, ), (w, ))
     for line in extended_lines:
         x1, y1, x2, y2, s = line
         if(s):
             blankImage_x = cv2.line(imgCopy, (x1, y1), (x2, y2), (0, 0,255), 10)  # ((x, ), (w, ))
+
+
 
 
 
@@ -1014,7 +1048,7 @@ def lineExtender(img,imgOrginal,thresh):
 
 while True:
 
-    img = cv2.imread("o6.JPG")
+    img = cv2.imread("o1.JPG")
 
 
 
