@@ -994,9 +994,21 @@ def lineExtender(img,imgOrginal,thresh):
             blankImage_y = cv2.line(blankImage_y, (x, y), (x , y+h), (255, 255, 255), 5)
             blankImage_y = cv2.line(blankImage_y, (x+w, y ), (x + w, y + h), (255, 255, 255), 5)
             forgrount_line_y = cv2.line(forgrount_line_y, (int(x+w/2), y ), (int(x+w/2), y + h), (255, 255, 255), int(forgrount_line_y.shape[0] / 500))
-            length_of_real_lines=length_of_real_lines+h
     blankImageResizeB = cv2.resize(blankImage_y, (widthImg, heightImg))  # RESIZE IMAGE
     cv2.imshow("blankImage_y", blankImageResizeB)
+    img_for_line_length=forgrount_line_y.copy()
+    kernel = np.ones((2, 20))
+    img_for_line_lengthDial = cv2.dilate(img_for_line_length, kernel, iterations=1)  # APPLY DILATION
+    img_for_line_lengthErod = cv2.erode(img_for_line_lengthDial, kernel, iterations=1)  # APPLY DILATION
+    # img_for_line_lengthErodgray = cv2.cvtColor(img_for_line_lengthErod, cv2.COLOR_GRAY2RGB)
+    ret3, img_for_line_lengthErodgray = cv2.threshold(cv2.cvtColor(img_for_line_lengthErod,cv2.COLOR_RGB2GRAY), 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+    contours_linesForSumOfLen = cv2.findContours(img_for_line_lengthErodgray, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
+    contours_linesForSumOfLen = contours_linesForSumOfLen[0] if len(contours_linesForSumOfLen) == 2 else contours_linesForSumOfLen[1]
+
+    for cntr in contours_linesForSumOfLen:
+        x, y, w, h = cv2.boundingRect(cntr)
+        length_of_real_lines = length_of_real_lines + h
 
     # forgrount_line_y=blankImage_y.copy()
     blankImageResizeB = cv2.resize(forgrount_line_y, (widthImg, heightImg))  # RESIZE IMAGE
@@ -1044,7 +1056,7 @@ def lineExtender(img,imgOrginal,thresh):
         if (True):
 
             x_line.append([x, y, w, h,False])
-            blankImage_x = cv2.line(imgCopy, (x, int(y+(h/2))), (x+w, int(y+(h/2))), (0, 255 ,0), 30)#((x, ), (w, ))
+            imgCopy=cv2.line(imgCopy, (x, int(y+(h/2))), (x+w, int(y+(h/2))), (0, 255 ,0), 30)#((x, ), (w, ))#horizontal real all lines
 
     kernel = np.ones((50, 2))
     imgDialy = cv2.dilate(blankImage_y, kernel, iterations=2)  # APPLY DILATION
@@ -1062,37 +1074,12 @@ def lineExtender(img,imgOrginal,thresh):
         x, y, w, h = cv2.boundingRect(cntr)
         if (True):
 
-            y_line.append([x, y, w, h,False])
+            # y_line.append([x, y, w, h,False])
             # blankImage_y = cv2.line(imgCopy3, (int(x+(w/2)), y), (int(x+(w/2)), y+h), (0, 255 ,0),5)#((x, ), (w, ))
-            blankImage_y = cv2.line(imgCopy, (int(x+(w/2)), y), (int(x+(w/2)), y+h), (0, 255 ,0),5)#((x, ), (w, ))
+            imgCopy = cv2.line(imgCopy, (int(x+(w/2)), y), (int(x+(w/2)), y+h), (0, 255 ,0),5)#vertical real all lines
     blankImageResizeyyy = cv2.resize(blankImage_y, (widthImg, heightImg))  # RESIZE IMAGE
     # cv2.imshow("blankImageResizeyyy", blankImageResizeyyy)
-    y_line.sort(key=getXFromRectx)
-    # for cntr in x_line:
-    #     x1, y1, w1, h1,s1 =cntr
-    #     leftcollem=x1
-    #     rightcollem=x1+w1
-    #     if  (w1>imgCopy.shape[1]/100):
-    #         minGap=imgCopy.shape[1]
-    #         for col in y_line:
-    #             x2, y2, w2, h2,s2 = col
-    #             if (minGap>abs(x1-int(x2+(w2/2)))):
-    #                 if ((y2<y1) &(y1<y2+h2))| ((math.sqrt((x1-int(x2+(w2/2)))*(x1-int(x2+(w2/2)))+(y1-y2)*(y1-y2))<imgCopy.shape[1]/6)) :
-    #                     if ((x1-int(x2+(w2/2)))<imgCopy.shape[1]/8) and x1>int(x2+(w2/2)):#abs(x1-x2)<imgCopy.shape[1]/20)|
-    #                         minGap = abs(x1 - int(x2+(w2/2)))
-    #                         leftcollem = int(x2 + (w2 / 2))
-    #         minGap = imgCopy.shape[1]
-    #
-    #
-    #         for col in y_line:
-    #             x2, y2, w2, h2, s2 = col
-    #             if (minGap > abs(x1 + w1 - x2 - (w2/2))):
-    #                 if ((y2<y1) &(y1<y2+(w2/2))) | (math.sqrt((x1+w1-x2-(w2/2))*(x1+w1-x2-(w2/2))+(y1+h1-y2-h2)*(y1+h1-y2-h2))<imgCopy.shape[1]/6):
-    #                     if((x2+(w2/2)-x1-w1)<imgCopy.shape[1]/8) and (x2+(w2/2))>(x1+w1):#abs(x1+w1-x2-w2)<imgCopy.shape[1]/20)|
-    #                         rightcollem=int( x2+w2/2)
-    #
-    #
-    #         blankImage_x = cv2.line(imgCopy, (leftcollem, int(y1 + (h1 / 2))), (rightcollem, int(y1 + (h1 / 2))), (0, 100,255), 20)  # ((x, ), (w, ))
+    # y_line.sort(key=getXFromRectx)
 
 
 
@@ -1117,16 +1104,21 @@ def lineExtender(img,imgOrginal,thresh):
     bottomBoder=[[leftConer[0]+leftConer[2],bottomConer[1]],[rightConer[0],bottomConer[1]]]
     for line in x_line:
         x1, y1, w1, h1, s1 = line
-        if abs(upperConer[1] + upperConer[3] - y1 - h1 / 2) < 200:
+        imgCopy3 = cv2.line(imgCopy3, (x1, int(y1 + (h1 / 2))), (x1 + w1, int(y1 + (h1 / 2))), (255, 255, 0),
+                            20)  # ((x, ), (w, ))
+        dy=200 if(maxWidth>imgCopy.shape[1]*3/5 ) and (abs( upperBoder[0][1] - maxWidthIndex)>img.shape[0]/9) else 100
+        if abs(upperConer[1] + upperConer[3] - y1 - h1 / 2) < dy  :
             continue
         x_lineCopy.append([x1, y1, w1, h1, s1])
-    x_line=[]
+
     x_line=x_lineCopy.copy()
     isUpChage=False
+    changingFactor=0
     if(maxWidth>imgCopy.shape[1]*3/5 ):
 
         x_line=[]
         k=0
+        changingFactor=abs( upperBoder[0][1] - maxWidthIndex)
         upperBoder[0][1] = maxWidthIndex-100
         upperBoder[1][1] = maxWidthIndex-100
         isUpChage=True
@@ -1136,43 +1128,75 @@ def lineExtender(img,imgOrginal,thresh):
             if(k<j):
                 continue
 
+            dy = 150 if changingFactor > img.shape[0] / 9 else 100
 
-            if(int(y1+h1/2)-maxWidthIndex<150):
+            if(( length_of_real_lines / col_details[6]) < img.shape[0] * 3 / 4):
+                dy = 150 if changingFactor > img.shape[0] / 9 else 200
+
+
+            if(int(y1+h1/2)-maxWidthIndex<dy):
                 continue
             x_line.append([x1, y1, w1, h1, s1])
             k=k+1
 
+
     contours = line_d[1]
     y_lines_cross_ub=[]
+    cv2.waitKey(10)
     lines_2 = []
+    imgtest = np.zeros((img.shape[0], img.shape[1], 3), np.uint8)
+    dy=200
+    if changingFactor>img.shape[0]/9:
+        dy = 250
+
     for cntr in contours:
 
         x, y, w, h = cntr
 
         if (((h / w) > 8) & (h > img.shape[0] / 50)):
             lines_2.append([x, y, x + w, y + h])
-            if((y<=upperBoder[0][1]+(200 if isUpChage else 0)) and (upperBoder[0][1]+(200 if isUpChage else 0)<y+h) )|((y>=upperBoder[0][1]+(200 if isUpChage else 0)) and (upperBoder[0][1]+(200 if isUpChage else 0)>y+h) ):
+            # imgtest = cv2.line(imgtest, (x, y), (x, y+h), (255, 0, 255), 10)
+
+            if((y<=(upperBoder[0][1]+(dy if isUpChage else 120))) and ((upperBoder[0][1]+(dy if isUpChage else 120))<(y+h)) )|((y>=(upperBoder[0][1]+(dy if isUpChage else 120))) and ((upperBoder[0][1]+(dy if isUpChage else 120))>(y+h)) ):
                 y_lines_cross_ub.append(cntr)
     lines_V = col_details[5]
     lines_=[]
-    if (length_of_real_lines/ col_details[6])<img.shape[0]*5/6:
+    if  (length_of_real_lines/ col_details[6])<img.shape[0]*3/4:
         if (lines_V is not None):
             for line in lines_V:
                 x1, y1, x2, y2 = line[0]
                 lines_.append(line[0])
-                if ((y1 <= upperBoder[0][1] + (200 if isUpChage else 200)) and (upperBoder[0][1]+(200 if isUpChage else 200) < y2))|((y1 >= upperBoder[0][1] + (200 if isUpChage else 200)) and ((upperBoder)[0][1]+(200 if isUpChage else 200) > y2)):
+                if ((y1 <=( upperBoder[0][1] + (250 if isUpChage else 150))) and ((upperBoder[0][1]+(250 if isUpChage else 150)) < y2))|((y1 >= (upperBoder[0][1] + (250 if isUpChage else 150))) and (((upperBoder[0][1]+(250 if isUpChage else 150)) > y2))):
                     y_lines_cross_ub.append([x1,y1,x2-x1,y2-y1])
-    imgtest = np.zeros((img.shape[0], img.shape[1], 3), np.uint8)
 
+    y_lines_cross_ub_collems=[]
     for cntr in y_lines_cross_ub:
         x, y, w, h = cntr
-        imgtest = cv2.line(imgtest, (int(x+w/2), y), (int(x+w/2), y+h), (255, 255, 255), 5)
-    imgtest = cv2.line(imgtest, (upperBoder[0][0], upperBoder[0][1]+ (200 if isUpChage else 100)), (imgtest.shape[1],upperBoder[0][1]+ (200 if isUpChage else 100)), (255, 255, 255), 10)
-    # imgtest = cv2.line(imgtest, (upperBoder[0][0], upperBoder[0][1]+ (200 if isUpChage else 200)), (imgtest.shape[1],upperBoder[0][1]+ (200 if isUpChage else 200)), (255, 0, 255), 5)
+        minGap=imgtest.shape[1]
+        near_col=cntr
+        for col in collems:
+            x2, y2, w2, h2 = col
+            if abs(x2+(w2/2)-(x+(w/2)))<minGap:
+                minGap=abs(x2+(w2/2)-(x+(w/2)))
+                near_col= [ x2, upperBoder[0][1]+ (100 if isUpChage else 20), w2, h2]
 
-        
-    x_line.append([upperBoder[0][0], upperBoder[0][1], upperBoder[1][0]-upperBoder[0][0], upperBoder[1][1]- upperBoder[0][1], False])
-    x_line.append([bottomBoder[0][0], bottomBoder[0][1], bottomBoder[1][0]-bottomBoder[0][0], bottomBoder[1][1]- bottomBoder[0][1], False])
+
+        if near_col not in y_lines_cross_ub_collems:
+            y_lines_cross_ub_collems.append(near_col)
+            imgtest = cv2.line(imgtest, (int(x + w / 2), y), (int(x + w / 2), y + h), (255, 255, 255), 20)
+            imgtest = cv2.line(imgtest, (int(near_col[0] + near_col[2] / 2), y),(int(near_col[0] + near_col[2] / 2), y + h), (0, 0, 255), 10)
+
+    if [leftConer[0], upperBoder[0][1]+ (100 if isUpChage else 20),leftConer[2],0] not in y_lines_cross_ub_collems:
+        y_lines_cross_ub_collems.append([leftConer[0], upperBoder[0][1]+ (100 if isUpChage else 20),leftConer[2],0])
+    if [rightConer[0],upperBoder[0][1]+ (100 if isUpChage else 20),rightConer[2],0] not in y_lines_cross_ub_collems:
+        y_lines_cross_ub_collems.append([rightConer[0],upperBoder[0][1]+ (100 if isUpChage else 20),rightConer[2],0])
+    y_lines_cross_ub_collems.sort(key=getXFromRectx)
+    imgtest = cv2.line(imgtest, (upperBoder[0][0], upperBoder[0][1]+ (220 if isUpChage else 120)), (imgtest.shape[1],upperBoder[0][1]+ (220 if isUpChage else 120)), (255, 255, 255), 10)
+    # imgtest = cv2.line(imgtest, (upperBoder[0][0], upperBoder[0][1]+ (200 if isUpChage else 200)), (imgtest.shape[1],upperBoder[0][1]+ (200 if isUpChage else 200)), (255, 0, 255), 5)
+    # x=100
+
+    # x_line.append([upperBoder[0][0], upperBoder[0][1], upperBoder[1][0]-upperBoder[0][0], upperBoder[1][1]- upperBoder[0][1], False])
+    x_line.append([bottomBoder[0][0]+150, bottomBoder[0][1], bottomBoder[1][0]-bottomBoder[0][0]-150, bottomBoder[1][1]- bottomBoder[0][1], False])
     x_line.sort(key=getXFromRecty)
     extended_lines=[]
 
@@ -1181,19 +1205,22 @@ def lineExtender(img,imgOrginal,thresh):
 
         leftcollem=collems[0][0]
         rightcollem=collems[len(collems)-1][0]
+
+
         if  (w1>imgCopy.shape[1]/100):
             for col in collems:
                 x2, y2, w2, h2 = col
 
-                if int( x2+(w2/2))<x1:
+                if (int(x2)<x1):# | ( x2-x1>0 and x2-x1<w2*2/3 ):
                     leftcollem=int( x2+(w2/2))
 
-                if int( x2+(w2/2))>x1+w1:
+                if (int( x2+w2)>x1+w1) :#or( x1-x2>0 and x1-x2<w2 ):
                     rightcollem=int( x2+(w2/2))
                     break
 
             extended_lines.append([leftcollem, int(y1 + (h1 / 2)),rightcollem, int(y1 + (h1 / 2)),True])
     extended_lines.sort(key=getXFromRecty)
+
     fx_lines=[]
     for i in range(0, len(extended_lines)):
         x1, y1, x2, y2,s = extended_lines[i]
@@ -1216,6 +1243,24 @@ def lineExtender(img,imgOrginal,thresh):
                             else:
                                 extended_lines[i][4] = False
     z=0
+    # for i in range(0, len(y_lines_cross_ub_collems) - 1):
+    #     x1, y1, w1, h1 = y_lines_cross_ub_collems[i]
+    #     x2, y2, w2, h2 = y_lines_cross_ub_collems[i + 1]
+    #     # imgCopy = cv2.line(imgCopy, (x1, y1), (x1, 500), (255, 0, 255), 10)  # ((x, ), (w, ))
+    #     # imgCopy = cv2.line(imgCopy, (int(x1 + w1 / 2), 500), (int(x2 + w2 / 2) - int(x1 + w1 / 2), 500), (255, 0, 255),
+    #     #                    10)  # ((x, ), (w, ))
+    #
+    #     extended_lines.append([int(x1 + w1 / 2), 10, int(x2 + w2 / 2) - int(x1 + w1 / 2), 5, False])
+    x=100
+    for i in range(0, len(y_lines_cross_ub_collems)-1):
+        x1, y1, w1, h1 = y_lines_cross_ub_collems[i]
+        x2, y2, w2, h2 = y_lines_cross_ub_collems[i+1]
+        # imgCopy = cv2.line(imgCopy, (x1, y1), (x1,250), (x, x, 0), 10)  # ((x, ), (w, ))
+        # imgCopy = cv2.line(imgCopy, (int(x1+w1/2)+50, 500), (int(x2+w2/2)-50,500), (x, 0, x), 10)  # ((x, ), (w, ))
+        x=x+50
+    #
+        extended_lines.append([int(x1+w1/2), upperBoder[0][1]+ (80 if isUpChage else 20),(int(x2+w2/2)), upperBoder[0][1]+ (80 if isUpChage else 20), True])
+    extended_lines.sort(key=getXFromRecty)
     for i in range( len(extended_lines)-1,-1,-1):
         x1, y1, x2, y2, s = extended_lines[i]
 
@@ -1236,6 +1281,9 @@ def lineExtender(img,imgOrginal,thresh):
                         break
             imgCopy = cv2.line(imgCopy, (x1, y1), l_bottom, (0, 0, 255), 10)  # ((x, ), (w, ))
             imgCopy = cv2.line(imgCopy, (x2, y2), r_bottom, (0, 0, 255), 10)  # ((x, ), (w, ))
+
+
+
     for line in extended_lines:
         x1, y1, x2, y2, s = line
         if(s):
@@ -1246,8 +1294,10 @@ def lineExtender(img,imgOrginal,thresh):
 
 
     cv2.imwrite("blankImage_x.jpg",blankImage_x)
-    blankImageResizey = cv2.resize(imgtest, (widthImg, heightImg))  # RESIZE IMAGE
+    blankImageResizey = cv2.resize(imgCopy, (widthImg, heightImg))  # RESIZE IMAGE
     cv2.imshow("textRMV_Rx111", blankImageResizey)
+    blankImageResizey2 = cv2.resize(imgtest, (widthImg, heightImg))  # RESIZE IMAGE
+    cv2.imshow("textRMV_Rx222", blankImageResizey2)
 
 
     cv2.waitKey(0)
@@ -1256,7 +1306,7 @@ def lineExtender(img,imgOrginal,thresh):
 
 while True:
 
-    img = cv2.imread("o17.JPG")
+    img = cv2.imread("o7.JPG")
 
 
 
