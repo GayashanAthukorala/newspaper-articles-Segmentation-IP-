@@ -99,75 +99,49 @@ def remove_text(img,imgOrginal,imgConters):
 
             img2 = cv2.line(img2, (x, y), (x , y+h), (0, 255, 0), 5)
             img2 = cv2.line(img2, (x+w, y ), (x + w, y + h), (0, 255, 0), 5)
-            blankImage = cv2.line(blankImage, (x, y), (x , y+h), (255, 255, 255), 5)
-            blankImage = cv2.line(blankImage, (x+w, y ), (x + w, y + h), (255, 255, 255), 5)
+            # blankImage = cv2.line(blankImage, (x, y), (x , y+h), (255, 255, 255), 5)
+            # blankImage = cv2.line(blankImage, (x+w, y ), (x + w, y + h), (255, 255, 255), 5)
+            blankImage2=cv2.line(blankImage2, (x, y), (x, y+h ), (255, 255, 255), 10)
+
 
         else:
             img2 = cv2.rectangle(img2, (x, y), (x + w, y + h), (255, 255, 255), -1)
-    blankImage = cv2.resize(img2, (widthImg, heightImg))  # RESIZE IMAGE
+    blankImage = cv2.resize(blankImage2, (widthImg, heightImg))  # RESIZE IMAGE
     cv2.imshow("textRMV_R44444", blankImage)
 
+    img_for_line_length = blankImage2.copy()
+    kernel = np.ones((2, 20))
+    img_for_line_lengthDial = cv2.dilate(img_for_line_length, kernel, iterations=1)  # APPLY DILATION
+    img_for_line_lengthErod = cv2.erode(img_for_line_lengthDial, kernel, iterations=1)  # APPLY DILATION
+    # img_for_line_lengthErodgray = cv2.cvtColor(img_for_line_lengthErod, cv2.COLOR_GRAY2RGB)
+    ret3, img_for_line_lengthErodgray = cv2.threshold(cv2.cvtColor(img_for_line_lengthErod, cv2.COLOR_RGB2GRAY), 0, 255,
+                                                      cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+    contours_linesForSumOfLen = cv2.findContours(img_for_line_lengthErodgray, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
+    contours_linesForSumOfLen = contours_linesForSumOfLen[0] if len(contours_linesForSumOfLen) == 2 else \
+    contours_linesForSumOfLen[1]
+    length_of_real_lines=0
+    for cntr in contours_linesForSumOfLen:
+        x, y, w, h = cv2.boundingRect(cntr)
+        length_of_real_lines = length_of_real_lines + h
+
+#     # kernel = np.ones((5, 5))
+#     # dilate = cv2.dilate(blankImage, kernel, iterations=3)  # APPLY DILATION
+#     # dilate = cv2.cvtColor(dilate,cv2.COLOR_RGB2GRAY)
+#     # otsuCanny = cv2.Canny(dilate, 50, 150, apertureSize=3)
+#     # lines_H = cv2.HoughLinesP(otsuCanny, 1, np.pi / 360, 200, minLineLength=int(img.shape[0] * .008), maxLineGap=int(img.shape[0] * .05))
+#     #
+#     #
+# a
+    return img2,line_contours,length_of_real_lines,contours_linesForSumOfLen
 
 
-
-
-    kernel = np.ones((5, 5))
-    dilate = cv2.dilate(blankImage, kernel, iterations=3)  # APPLY DILATION
-    dilate = cv2.cvtColor(dilate,cv2.COLOR_RGB2GRAY)
-    otsuCanny = cv2.Canny(dilate, 50, 150, apertureSize=3)
-    lines_H = cv2.HoughLinesP(otsuCanny, 1, np.pi / 360, 200, minLineLength=int(img.shape[0] * .008), maxLineGap=int(img.shape[0] * .05))
-    # if (lines_H is not None):
-    #     for line in lines_H:
-    #         x1, y1, x2, y2 = line[0]
-    #         cv2.line(blankImage2, (x1, y1), (x2, y2), (255, 255, 0), 5)
-    #
-    #         if(y1==y2):
-    #             lx=min(x1,x2)
-    #             rx=max(x1,x2)
-    #             nearLCol=0
-    #             nearRCol=collems[0]
-    #             i=0
-    #             for col in len(collems):#collems must be sorted
-    #                 if lx > col:
-    #                   nearLCol=col
-    #                 else:
-    #                     break
-    #             for col in len(collems):#collems must be sorted
-    #                 if rx > col:
-    #                     continue
-    #                 else:
-    #                     nearRCol = col
-    #                     break
-
-
-
-
-    #
-
-    #resize = cv2.resize(imgAdaptiveThre, (widthImg, heightImg))  # RESIZE IMAGE
-    # imgForHorizontalLine_Inver_r = cv2.resize(blankImage2, (widthImg, heightImg))  # RESIZE IMAGE
-    # imgForVerticalLine_Invert_R = cv2.resize(otsuCanny, (widthImg, heightImg))  # RESIZE IMAGE
-
-    #cv2.imshow("resize",resize)
-    # cv2.imshow("gradiant",imgForHorizontalLine_Inver_r)
-    # cv2.imshow("imgForVerticalLine_Invert_R",imgForVerticalLine_Invert_R)
-
-
-
-    return img2,line_contours
-
-
-def drowLines(img,imgOriginal,thresh):
-
-    cv2.waitKey(10)
-    cv2.waitKey(10)
-
+def drowLines(img,imgOriginal,thresh,rmv):# rmv=remove_images(imgCopy1,imgCopy2,thresh)
     imgCopy1 = img.copy()
     imgCopy2 = img.copy()
     imgCopy3 =  np.zeros((img.shape[0], img.shape[1], 3), np.uint8)
     imgCopy4 =  np.zeros((img.shape[0], img.shape[1], 3), np.uint8)
 
-    rmv=remove_images(imgCopy1,imgCopy2,thresh)
 
     img_withowt_pics=rmv[3]
     img_Conters=rmv[4]
@@ -199,10 +173,8 @@ def drowLines(img,imgOriginal,thresh):
         elif (((h/w)>8) & (h>50)):
             # sobelY=cv2.line(sobelY, (x, y), (x+w, y ),(0, 0, 0), 5)
             sobelY=cv2.line(sobelY, (int(x+w/2), y ), (int(x+w/2), y + h), (0, 0, 0), 10)
-            imgCopy4=cv2.line(imgCopy4, (int(x+w/2), y), (int(x+w/2), y + h),(0, 0, 255), 10)
 
-            # imgCopy3=cv2.line(imgCopy3, (x, y), (x+w, y ),(0, 0, 255), 5)
-            # imgCopy3=cv2.line(imgCopy3, (x+w, y ), (x + w, y + h), (0, 0, 255), 5)
+            imgCopy4=cv2.line(imgCopy4, (int(x+w/2), y), (int(x+w/2), y + h),(0, 0, 255), 10)
 
             # sobelX=cv2.line(sobelX, (x, y), (x+w, y ),(255, 255, 255), 5)
             sobelX=cv2.line(sobelX, (int(x+w/2), y ), (int(x+w/2), y + h), (255, 255, 255), 5)
@@ -212,31 +184,31 @@ def drowLines(img,imgOriginal,thresh):
     # imgCopy3 = cv2.dilate(imgCopy3, kernel, iterations=2)  # APPLY DILATION
     # imgCopy3 = cv2.erode(imgCopy3, kernel, iterations=2)  # APPLY DILATION
     # imgCopy3=cv2.cvtColor(imgCopy3,cv2.COLOR_RGB2GRAY)
-        ############################################################################
+    ############################################################################
 
-        kernel = np.ones((50, 2))
-        imgCopy4 = cv2.dilate(imgCopy4, kernel, iterations=2)  # APPLY DILATION
-        imgCopy4 = cv2.erode(imgCopy4, kernel, iterations=2)  # APPLY DILATION
-        kernel = np.ones((10, 10))
 
-        imgCopy4 = cv2.dilate(imgCopy4, kernel, iterations=1)  # APPLY DILATION
-        imgCopy4 = cv2.erode(imgCopy4, kernel, iterations=1)  # APPLY DILATION
+    kernel = np.ones((50, 2))
+    imgCopy4 = cv2.dilate(imgCopy4, kernel, iterations=2)  # APPLY DILATION
+    imgCopy4 = cv2.erode(imgCopy4, kernel, iterations=2)  # APPLY DILATION
+    kernel = np.ones((10, 10))
 
-        ret3, otsu_hori_lines = cv2.threshold(cv2.cvtColor(imgCopy4, cv2.COLOR_RGB2GRAY), 0, 255,
-                                              cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
-        contours_hori_lines = cv2.findContours(otsu_hori_lines, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
+    imgCopy4 = cv2.dilate(imgCopy4, kernel, iterations=1)  # APPLY DILATION
+    imgCopy4 = cv2.erode(imgCopy4, kernel, iterations=1)  # APPLY DILATION
 
-        contours_hori_lines = contours_hori_lines[0] if len(contours_hori_lines) == 2 else contours_hori_lines[1]
-        # lines = cv2.HoughLinesP(imgCopy3, 5, np.pi/2, 100, minLineLength=int(imgCopy3.shape[0] / 7),maxLineGap=int(imgCopy3.shape[0] * .009))
-        y_lines = []
-        for line in contours_hori_lines:
-            x1, y1, x2, y2 = cv2.boundingRect(line)
-            cv2.line(imgCopy2, (int(x1 + (x2 / 2)), y1), (int(x1 + (x2 / 2)), y1 + y2), (255, 255, 255), 10)
-            y_lines.append([x1, y1, x2, y2, False])
-        ####################################################################################
-    cv2.waitKey(10)
-    cv2.waitKey(10)
+
+    ret3, otsu_hori_lines = cv2.threshold(cv2.cvtColor(imgCopy4, cv2.COLOR_RGB2GRAY), 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+    contours_hori_lines = cv2.findContours(otsu_hori_lines, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_TC89_KCOS)
+
+    contours_hori_lines = contours_hori_lines[0] if len(contours_hori_lines) == 2 else contours_hori_lines[1]
+    # lines = cv2.HoughLinesP(imgCopy3, 5, np.pi/2, 100, minLineLength=int(imgCopy3.shape[0] / 7),maxLineGap=int(imgCopy3.shape[0] * .009))
+    y_lines = []
+    for line in contours_hori_lines:
+        x1, y1, x2, y2 = cv2.boundingRect(line)
+        cv2.line(imgCopy2, (int(x1 + (x2 / 2)), y1), (int(x1 + (x2 / 2)), y1 + y2), (255, 255, 255),10)
+        y_lines.append([x1, y1, x2, y2, False])
+    ####################################################################################
 
     kernel = np.ones((2, 50))
     imgCopy3 = cv2.dilate(imgCopy3, kernel, iterations=2)  # APPLY DILATION
@@ -255,9 +227,11 @@ def drowLines(img,imgOriginal,thresh):
     x_line = []
     for line in contours_l:
         x1, y1, x2, y2 =cv2.boundingRect(line)
-        cv2.line(imgCopy2, (x1,int( y1+(y2/2))), (x1+x2, int(y1+(y2/2))), (255, 255, 255), int(heightImg / 350))
+        cv2.line(imgCopy2, (x1,int( y1+(y2/2))), (x1+x2, int(y1+(y2/2))), (255, 255, 0), int(heightImg / 350))
         x_line.append([ x1, y1, x2, y2, False])
     ####################################################################################
+    imgAllLins = cv2.resize(imgCopy2, (widthImg, heightImg))  # RESIZE IMAGE
+    cv2.imshow("imgAllLins_c", imgAllLins)
 
 
 
@@ -304,8 +278,10 @@ def drowLines(img,imgOriginal,thresh):
 
     # imgDial_I = cv2.erode(imgDial_I, kernel, iterations=1)  # APPLY DILATION
     # imgDial_I = cv2.dilate(imgDial_I, kernel, iterations=1)  # APPLY DILATION
-
+    length_of_real_lines=textRMV[2]
     kernel = np.ones((15, 15))
+    # if ((length_of_real_lines ) > img.shape[0] * 1.5):
+    #     kernel = np.ones((10, 10))
 
     imgDial_I = cv2.dilate(imgDial_I, kernel, iterations=1)  # APPLY DILATION
     # imgDial_I = cv2.dilate(imgDial_I, kernel, iterations=1)  # APPLY DILATION
@@ -369,21 +345,20 @@ def drowLines(img,imgOriginal,thresh):
                                pt2=(image_rlsa_hori_dilate.shape[1], upperBoder), color=(0, 0, 0),
                                thickness=-1)
     blankImageX = cv2.resize(image_rlsa_hori_dilate, (widthImg, heightImg))  # RESIZE IMAGE
-    cv2.imshow("textRMV_Rsla", blankImageX)
+    cv2.imshow("textRMV_Rsla1", blankImageX)
     for line in y_lines:
         x1, y1, w1, h1, s1 = line
-        image_rlsa_hori_dilate = cv2.line(image_rlsa_hori_dilate, (int(x1 + w1 / 2), y1), (int(x1 + w1 / 2), y1 + h1),
-                                          (255, 255, 255), 10)
+        image_rlsa_hori_dilate = cv2.line(image_rlsa_hori_dilate, (int(x1 + w1 / 2), y1), (int(x1 + w1 / 2), y1 + h1), (255, 255, 255), 10)
 
     lines_V = cv2.HoughLinesP(image_rlsa_hori_dilate, 5, np.pi, 100, minLineLength=int(image_rlsa_hori_dilate.shape[0] /7), maxLineGap=int(imgOriginal.shape[0] * .009))
     blankImage = np.zeros((img.shape[0], img.shape[1], 3), np.uint8)
 
 
 
-    # if (lines_V is not None):
-    #     for line in lines_V:
-    #         x1, y1, x2, y2 = line[0]
-    #         cv2.line(blankImage, (x1, y1), (x2, y2), (255, 255, 255), int(heightImg / 350))
+    if (lines_V is not None):
+        for line in lines_V:
+            x1, y1, x2, y2 = line[0]
+            cv2.line(blankImage, (x1, y1), (x2, y2), (255, 255, 255), int(heightImg / 350))
     blankImageX = cv2.resize(blankImage, (widthImg, heightImg))  # RESIZE IMAGE
     cv2.imshow("textRMV_Rsla", blankImageX)
     blankImage = cv2.rectangle(img=blankImage, pt1=(0, 0),
@@ -577,13 +552,11 @@ def drowLines(img,imgOriginal,thresh):
         num_of_effective_col = num_of_effective_col - 1
     if (rightConer[2] > 0):
         num_of_effective_col = num_of_effective_col - 1
-    cv2.waitKey(10)
 
     return [leftConer,rightConer],[upperConer,bottomConer],maxWidth,rects,rects_h,backgraond_line,num_of_effective_col #rects=collems rects_h=vertical separethins
 
 
 def remove_images(img,imgOrginal,tresh):
-    cv2.waitKey(10)
 
     kernalSize=int( img.shape[1] / widthImg/20)
     if ( kernalSize%2==0):kernalSize=kernalSize+1
@@ -784,8 +757,6 @@ def blur_Sobel(img):  # DONT USE ADEPTIVE THRESH
 
     return bw, sobelCombined
 def pixeldensity(img,imgOrginal,thresh):
-    cv2.waitKey(10)
-
     col_details=drowLines(img,imgOrginal,thresh)
 
     imgThresholdBW = blur_Sobel(img)[0]
@@ -797,8 +768,8 @@ def pixeldensity(img,imgOrginal,thresh):
     kernel = np.ones((2, 5))
     image_moprphology_hori = cv2.morphologyEx(imgThresholdBWInvert, cv2.MORPH_ERODE, kernel)
 
-    # cropdResize_imgThresholdBWInvert_h = cv2.resize(image_moprphology_hori, (widthImg, heightImg))  # RESIZE IMAGE
-    # cv2.imshow("cropdResize_imgThresholdBWInvert_h_h", cropdResize_imgThresholdBWInvert_h)
+    cropdResize_imgThresholdBWInvert_h = cv2.resize(image_moprphology_hori, (widthImg, heightImg))  # RESIZE IMAGE
+    cv2.imshow("cropdResize_imgThresholdBWInvert_h_h", cropdResize_imgThresholdBWInvert_h)
 
     # cv2.imshow("image_moprphology_verti", image_moprphology_verti)
     # cv2.imshow("image_moprphology_hori", image_moprphology_hori)
@@ -826,8 +797,8 @@ def pixeldensity(img,imgOrginal,thresh):
         cv2.line(blankImageforHorizontal, (0, row),
                  (int(horizontal_projection[row]), row),
                  (255, 255, 255), 1)
-    # cropdResize_imgThresholdBWInvert_h = cv2.resize(blankImageforHorizontal, (widthImg, heightImg))  # RESIZE IMAGE
-    # cv2.imshow("cropdResize_imgThresholdBWInvert_h", cropdResize_imgThresholdBWInvert_h)
+    cropdResize_imgThresholdBWInvert_h = cv2.resize(blankImageforHorizontal, (widthImg, heightImg))  # RESIZE IMAGE
+    cv2.imshow("cropdResize_imgThresholdBWInvert_h", cropdResize_imgThresholdBWInvert_h)
 
     # mean_vertical = int(np.mean(vertical_projection))
     # max_vertical = int(np.max(vertical_projection))
@@ -893,10 +864,10 @@ def pixeldensity(img,imgOrginal,thresh):
         num_of_effective_col=num_of_effective_col-1
 
     median_col_width=(sum_col_width-leftConer[2]-rightConer[2])/1 if num_of_effective_col==0 else num_of_effective_col
-    # print("median",median_col_width)
-    # print("l:", leftConer)
-    # print("R:", rightConer)
-    # print("clusters:", col_details[3])
+    print("median",median_col_width)
+    print("l:", leftConer)
+    print("R:", rightConer)
+    print("clusters:", col_details[3])
 
     # blankImageforHorizontal = cv2.cvtColor(blankImageforHorizontal, cv2.COLOR_BGR2GRAY)
     # ret3, imgThresholdBWInvert_h = cv2.threshold(blankImageforHorizontal, 0, 255,
@@ -926,8 +897,8 @@ def pixeldensity(img,imgOrginal,thresh):
     #                       0,int(rects_h[len(rects_h) - 1][3] * imgOrginal.shape[0] / height) ]
 
 
-    # print("U:", upperConer)
-    # print("B:", bottomConer)
+    print("U:", upperConer)
+    print("B:", bottomConer)
     rmv = remove_images(img,imgOrginal,thresh)
     imgWithoutPic=rmv[1].copy()
     cropedImg = imgWithoutPic[upperConer[1]+upperConer[3]-5:bottomConer[1], leftConer[0]+leftConer[2]:rightConer[0]]
@@ -986,15 +957,13 @@ def pixeldensity(img,imgOrginal,thresh):
                     break
                 else:
                     break
-    cv2.waitKey(10)
 
     #ave_of_vertical_gap=sum_of_vertical_gap/ sum_of_effective_conters
     #print("ave_of_vertical_gap",ave_of_vertical_gap)ss
 
 
-def lineExtender(img,imgOrginal,thresh):
-    cv2.waitKey(10)
-    cv2.waitKey(10)
+def lineExtender(img,imgOrginal,thresh,col_details,rmv,line_d):#    col_details = drowLines(img, imgOrginal, thresh) rmv = remove_images(imgCopy1, imgCopy2, thresh)line_d=remove_text(rmv[1],imgOrginal,rmv[4])
+
     imgCopy=img.copy()
     imgCopy=cv2.cvtColor(imgCopy,cv2.COLOR_GRAY2RGB)
     imgCopy1=img.copy()
@@ -1002,11 +971,10 @@ def lineExtender(img,imgOrginal,thresh):
     imgCopy3=imgCopy.copy()
     blankImage_x = np.zeros((img.shape[0], img.shape[1], 3), np.uint8)
     blankImage_y = np.zeros((img.shape[0], img.shape[1], 3), np.uint8)
-    col_details = drowLines(img, imgOrginal, thresh)
-    collems=col_details[3]
-    rmv = remove_images(imgCopy1, imgCopy2, thresh)
 
-    line_d=remove_text(rmv[1],imgOrginal,rmv[4])
+
+
+    collems = col_details[3]
     leftConer = col_details[0][0]
     rightConer = col_details[0][1]
     upperConer = col_details[1][0]
@@ -1017,7 +985,7 @@ def lineExtender(img,imgOrginal,thresh):
     y_line=[]
     forgrount_line_y = blankImage_y.copy()
     contours = line_d[1]
-    length_of_real_lines=0
+
     for cntr in contours:
 
         x, y, w, h = cntr
@@ -1034,21 +1002,10 @@ def lineExtender(img,imgOrginal,thresh):
             blankImage_y = cv2.line(blankImage_y, (x, y), (x , y+h), (255, 255, 255), 5)
             blankImage_y = cv2.line(blankImage_y, (x+w, y ), (x + w, y + h), (255, 255, 255), 5)
             forgrount_line_y = cv2.line(forgrount_line_y, (int(x+w/2), y ), (int(x+w/2), y + h), (255, 255, 255), int(forgrount_line_y.shape[0] / 500))
-    # blankImageResizeB = cv2.resize(blankImage_y, (widthImg, heightImg))  # RESIZE IMAGE
-    # cv2.imshow("blankImage_y", blankImageResizeB)
-    img_for_line_length=forgrount_line_y.copy()
-    kernel = np.ones((2, 20))
-    img_for_line_lengthDial = cv2.dilate(img_for_line_length, kernel, iterations=1)  # APPLY DILATION
-    img_for_line_lengthErod = cv2.erode(img_for_line_lengthDial, kernel, iterations=1)  # APPLY DILATION
-    # img_for_line_lengthErodgray = cv2.cvtColor(img_for_line_lengthErod, cv2.COLOR_GRAY2RGB)
-    ret3, img_for_line_lengthErodgray = cv2.threshold(cv2.cvtColor(img_for_line_lengthErod,cv2.COLOR_RGB2GRAY), 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    blankImageResizeB = cv2.resize(blankImage_y, (widthImg, heightImg))  # RESIZE IMAGE
+    cv2.imshow("blankImage_y", blankImageResizeB)
 
-    contours_linesForSumOfLen = cv2.findContours(img_for_line_lengthErodgray, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
-    contours_linesForSumOfLen = contours_linesForSumOfLen[0] if len(contours_linesForSumOfLen) == 2 else contours_linesForSumOfLen[1]
-
-    for cntr in contours_linesForSumOfLen:
-        x, y, w, h = cv2.boundingRect(cntr)
-        length_of_real_lines = length_of_real_lines + h
+    length_of_real_lines = line_d[2]
 
     # forgrount_line_y=blankImage_y.copy()
     # blankImageResizeB = cv2.resize(forgrount_line_y, (widthImg, heightImg))  # RESIZE IMAGE
@@ -1059,13 +1016,13 @@ def lineExtender(img,imgOrginal,thresh):
             x1, y1, x2, y2 = line[0]
             cv2.line(forgrount_line_y, (x1, y1), (x2, y2), (255, 255, 255), int(forgrount_line_y.shape[0] / 500))#acurateed line set
     all_lines_y=forgrount_line_y.copy()
-    # all_lines_y_b = cv2.resize(forgrount_line_y, (widthImg, heightImg))  # RESIZE IMAGE
-    # cv2.imshow("all_lines_y_b", all_lines_y_b)
+    all_lines_y_b = cv2.resize(forgrount_line_y, (widthImg, heightImg))  # RESIZE IMAGE
+    cv2.imshow("all_lines_y_b", all_lines_y_b)
     kernel = np.ones((2, 20))
     all_lines_y_imgDial = cv2.dilate(all_lines_y, kernel, iterations=1)  # APPLY DILATION
     all_lines_y_imgErod = cv2.erode(all_lines_y_imgDial, kernel, iterations=1)  # APPLY DILATION
-    # all_lines_y_imgDialR = cv2.resize(all_lines_y_imgErod, (widthImg, heightImg))  # RESIZE IMAGE
-    # cv2.imshow("all_lines_y_imgDialR", all_lines_y_imgDialR)
+    all_lines_y_imgDialR = cv2.resize(all_lines_y_imgErod, (widthImg, heightImg))  # RESIZE IMAGE
+    cv2.imshow("all_lines_y_imgDialR", all_lines_y_imgDialR)
     blankImage_x = cv2.rectangle(blankImage_x, (0, 0), (leftConer[0]+leftConer[2], blankImage_x.shape[0]), (0, 0, 0), -1)
     blankImage_x = cv2.rectangle(blankImage_x, (rightConer[0], 0), (rightConer[0]+rightConer[2], blankImage_x.shape[0]), (0, 0, 0), -1)
     blankImage_x = cv2.rectangle(blankImage_x, (0, 0), (blankImage_x.shape[1], upperConer[1]+upperConer[3]), (0, 0, 0), -1)
@@ -1134,51 +1091,55 @@ def lineExtender(img,imgOrginal,thresh):
 
 
         if imgCopy.shape[0]/4 >y1+h1/2:
-            if(maxWidth<w1):
+            if((maxWidth<w1) or abs(maxWidth-w1)<maxWidth/10):
                 maxWidth=w1
                 maxWidthIndex=int(y1+h1/2)
                 j=i
+        else:
+            break
     i=i+1
     x_lineCopy =[]
     upperBoder=[[leftConer[0]+leftConer[2],upperConer[1]+upperConer[3]],[rightConer[0],upperConer[1]+upperConer[3]]]
     bottomBoder=[[leftConer[0]+leftConer[2],bottomConer[1]],[rightConer[0],bottomConer[1]]]
-    for line in x_line:
-        x1, y1, w1, h1, s1 = line
-        imgCopy3 = cv2.line(imgCopy3, (x1, int(y1 + (h1 / 2))), (x1 + w1, int(y1 + (h1 / 2))), (255, 255, 0),
-                            20)  # ((x, ), (w, ))
-        dy=200 if(maxWidth>imgCopy.shape[1]*3/5 ) and (abs( upperBoder[0][1] - maxWidthIndex)>img.shape[0]/9) else 100
-        if abs(upperConer[1] + upperConer[3] - y1 - h1 / 2) < dy  :
-            continue
-        x_lineCopy.append([x1, y1, w1, h1, s1])
 
-    x_line=x_lineCopy.copy()
+    # x_line=x_lineCopy.copy()
     isUpChage=False
     changingFactor=0
-    if(maxWidth>imgCopy.shape[1]*3/5 ):
+    if(maxWidth>imgCopy.shape[1]*3/5 or abs(maxWidth-imgCopy.shape[1]*3/5)<100 ):
 
-        x_line=[]
+
         k=0
         changingFactor=abs( upperBoder[0][1] - maxWidthIndex)
-        upperBoder[0][1] = maxWidthIndex-100
-        upperBoder[1][1] = maxWidthIndex-100
+        upperBoder[0][1] = maxWidthIndex
+        upperBoder[1][1] = maxWidthIndex
         isUpChage=True
-        for line in x_lineCopy:
+        print("ll:",length_of_real_lines / col_details[6])
+        if ((length_of_real_lines / col_details[6]) > img.shape[0]  / 2):  # FOR remove near line for UP
+            dy = 150 if (length_of_real_lines / col_details[6] )> (img.shape[0] *3 / 4) else 100
+        else:
+            dy = 250 if maxWidthIndex > img.shape[0] / 9 else 250
+
+        for line in x_line:
             x1, y1, w1, h1, s1 = line
 
-            if(k<j):
+            if(y1<maxWidthIndex):
                 continue
-
-            dy = 150 if changingFactor > img.shape[0] / 9 else 100
-
-            if(( length_of_real_lines / col_details[6]) < img.shape[0] * 3 / 4):
-                dy = 150 if changingFactor > img.shape[0] / 9 else 200
-
 
             if(int(y1+h1/2)-maxWidthIndex<dy):
                 continue
-            x_line.append([x1, y1, w1, h1, s1])
+            x_lineCopy.append([x1, y1, w1, h1, s1])
             k=k+1
+        x_line=x_lineCopy.copy()
+    if not isUpChage:
 
+        for line in x_line:
+            x1, y1, w1, h1, s1 = line
+
+            dy= 100
+            if abs(upperConer[1] + upperConer[3] - y1 - h1 / 2) < dy  :
+                continue
+            x_lineCopy.append([x1, y1, w1, h1, s1])
+        x_line = x_lineCopy.copy()
 
     contours = line_d[1]
     y_lines_cross_ub=[]
@@ -1186,7 +1147,7 @@ def lineExtender(img,imgOrginal,thresh):
     lines_2 = []
     imgtest = np.zeros((img.shape[0], img.shape[1], 3), np.uint8)
     dy=200
-    if changingFactor>img.shape[0]/9:
+    if maxWidthIndex>img.shape[0]/9:
         dy = 250
 
     for cntr in contours:
@@ -1195,9 +1156,9 @@ def lineExtender(img,imgOrginal,thresh):
 
         if (((h / w) > 8) & (h > img.shape[0] / 50)):
             lines_2.append([x, y, x + w, y + h])
-            # imgtest = cv2.line(imgtest, (x, y), (x, y+h), (255, 0, 255), 10)
+            imgtest = cv2.line(imgtest, (x, y), (x, y+h), (255, 0, 255), 10)
 
-            if((y<=(upperBoder[0][1]+(dy if isUpChage else 120))) and ((upperBoder[0][1]+(dy if isUpChage else 120))<(y+h)) )|((y>=(upperBoder[0][1]+(dy if isUpChage else 120))) and ((upperBoder[0][1]+(dy if isUpChage else 120))>(y+h)) ):
+            if((y-100<=(upperBoder[0][1])) and ((upperBoder[0][1])<(y+h)) )|((y>=(upperBoder[0][1])) and ((upperBoder[0][1])>(y+h-100)) ):
                 y_lines_cross_ub.append(cntr)
     lines_V = col_details[5]
     lines_=[]
@@ -1206,8 +1167,14 @@ def lineExtender(img,imgOrginal,thresh):
             for line in lines_V:
                 x1, y1, x2, y2 = line[0]
                 lines_.append(line[0])
-                if ((y1 <=( upperBoder[0][1] + (250 if isUpChage else 150))) and ((upperBoder[0][1]+(250 if isUpChage else 150)) < y2))|((y1 >= (upperBoder[0][1] + (250 if isUpChage else 150))) and (((upperBoder[0][1]+(250 if isUpChage else 150)) > y2))):
-                    y_lines_cross_ub.append([x1,y1,x2-x1,y2-y1])
+                imgtest = cv2.line(imgtest, (x1, y1+50), (x2, y2+50), (0, 0, 255), 10)
+
+                if ((y1-50 <=( upperBoder[0][1] )) and ((upperBoder[0][1]) < y2))|((y1 >= (upperBoder[0][1] )) and (((upperBoder[0][1]) > y2-50))):
+                    y_lines_cross_ub.append([x1,y1,abs(x1-x2),abs(y1-y2)])
+    imgtest = cv2.line(imgtest, (upperBoder[0][0], upperBoder[0][1]), (upperBoder[1][0], upperBoder[1][1]), (0, 255, 0), 10)
+
+    imgL = cv2.resize(imgtest, (widthImg, heightImg))  # RESIZE IMAGE
+    cv2.imshow("imgL", imgL)
 
     y_lines_cross_ub_collems=[]
     for cntr in y_lines_cross_ub:
@@ -1218,7 +1185,7 @@ def lineExtender(img,imgOrginal,thresh):
             x2, y2, w2, h2 = col
             if abs(x2+(w2/2)-(x+(w/2)))<minGap:
                 minGap=abs(x2+(w2/2)-(x+(w/2)))
-                near_col= [ x2, upperBoder[0][1]+ (100 if isUpChage else 20), w2, h2]
+                near_col= [ x2, upperBoder[0][1], w2, h2]
 
 
         if near_col not in y_lines_cross_ub_collems:
@@ -1226,17 +1193,17 @@ def lineExtender(img,imgOrginal,thresh):
             imgtest = cv2.line(imgtest, (int(x + w / 2), y), (int(x + w / 2), y + h), (255, 255, 255), 20)
             imgtest = cv2.line(imgtest, (int(near_col[0] + near_col[2] / 2), y),(int(near_col[0] + near_col[2] / 2), y + h), (0, 0, 255), 10)
 
-    if [leftConer[0], upperBoder[0][1]+ (100 if isUpChage else 20),leftConer[2],0] not in y_lines_cross_ub_collems:
-        y_lines_cross_ub_collems.append([leftConer[0], upperBoder[0][1]+ (100 if isUpChage else 20),leftConer[2],0])
-    if [rightConer[0],upperBoder[0][1]+ (100 if isUpChage else 20),rightConer[2],0] not in y_lines_cross_ub_collems:
-        y_lines_cross_ub_collems.append([rightConer[0],upperBoder[0][1]+ (100 if isUpChage else 20),rightConer[2],0])
+    if [leftConer[0], upperBoder[0][1],leftConer[2],0] not in y_lines_cross_ub_collems:
+        y_lines_cross_ub_collems.append([leftConer[0], upperBoder[0][1],leftConer[2],0])
+    if [rightConer[0],upperBoder[0][1],rightConer[2],0] not in y_lines_cross_ub_collems:
+        y_lines_cross_ub_collems.append([rightConer[0],upperBoder[0][1],rightConer[2],0])
     y_lines_cross_ub_collems.sort(key=getXFromRectx)
-    imgtest = cv2.line(imgtest, (upperBoder[0][0], upperBoder[0][1]+ (220 if isUpChage else 120)), (imgtest.shape[1],upperBoder[0][1]+ (220 if isUpChage else 120)), (255, 255, 255), 10)
+    imgtest = cv2.line(imgtest, (upperBoder[0][0], upperBoder[0][1]), (imgtest.shape[1],upperBoder[0][1]), (255, 255, 255), 10)
     # imgtest = cv2.line(imgtest, (upperBoder[0][0], upperBoder[0][1]+ (200 if isUpChage else 200)), (imgtest.shape[1],upperBoder[0][1]+ (200 if isUpChage else 200)), (255, 0, 255), 5)
     # x=100
 
     # x_line.append([upperBoder[0][0], upperBoder[0][1], upperBoder[1][0]-upperBoder[0][0], upperBoder[1][1]- upperBoder[0][1], False])
-    x_line.append([bottomBoder[0][0]+150, bottomBoder[0][1], bottomBoder[1][0]-bottomBoder[0][0]-150, bottomBoder[1][1]- bottomBoder[0][1], False])
+    x_line.append([bottomBoder[0][0], bottomBoder[0][1], bottomBoder[1][0]-bottomBoder[0][0], bottomBoder[1][1]- bottomBoder[0][1], False])
     x_line.sort(key=getXFromRecty)
     extended_lines=[]
 
@@ -1299,7 +1266,7 @@ def lineExtender(img,imgOrginal,thresh):
         # imgCopy = cv2.line(imgCopy, (int(x1+w1/2)+50, 500), (int(x2+w2/2)-50,500), (x, 0, x), 10)  # ((x, ), (w, ))
         x=x+50
     #
-        extended_lines.append([int(x1+w1/2), upperBoder[0][1]+ (80 if isUpChage else 20),(int(x2+w2/2)), upperBoder[0][1]+ (80 if isUpChage else 20), True])
+        extended_lines.append([int(x1+w1/2), upperBoder[0][1],(int(x2+w2/2)), upperBoder[0][1], True])
     extended_lines.sort(key=getXFromRecty)
     for i in range( len(extended_lines)-1,-1,-1):
         x1, y1, x2, y2, s = extended_lines[i]
@@ -1346,7 +1313,7 @@ def lineExtender(img,imgOrginal,thresh):
 
 while True:
 
-    img = cv2.imread("o5.jpg")
+    img = cv2.imread("o19.jpg")
 
 
 
@@ -1430,7 +1397,11 @@ while True:
 
         #remove_images(imgCopyforRemoveImage1,imgCopyforRemoveImage1,ret4)
         # pixeldensity(imgCopyforRemoveImage1, imgCopyforRemoveImage1,ret4)
-        imgtest=lineExtender(imgCopyforRemoveImage1,imgCopyforRemoveImage1,ret4)
+        rmv = remove_images(imgCopyforRemoveImage1, imgCopyforRemoveImage1, ret4)
+        col_details = drowLines(imgCopyforRemoveImage1, imgCopyforRemoveImage1, ret4,rmv)
+        line_d=remove_text(rmv[1],imgCopyforRemoveImage1,rmv[4])
+
+        imgtest=lineExtender(imgCopyforRemoveImage1,imgCopyforRemoveImage1,ret4,col_details,rmv,line_d)
         cv2.waitKey(0)
         cv2.waitKey(0)
         cv2.waitKey(0)
